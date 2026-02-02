@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Day</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFFFFF 100%);
+            font-family: 'Arial', sans-serif;
+            cursor: none;
+        }
+
+        #custom-cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #FF69B4;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+        }
+
+        .container {
+            background: white;
+            padding: 60px 80px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(255, 105, 180, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #FF69B4;
+            font-size: 32px;
+            margin-bottom: 40px;
+            font-weight: bold;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        #yes-btn {
+            background: #FF69B4;
+            color: white;
+        }
+
+        #yes-btn:hover {
+            transform: scale(1.1);
+            background: #FF1493;
+        }
+
+        #no-btn {
+            background: #FFB6C1;
+            color: white;
+            position: fixed;
+            pointer-events: none;
+        }
+
+        .no-btn-clone {
+            background: #FFB6C1;
+            color: white;
+            position: fixed;
+            pointer-events: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        .gif-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .gif-container iframe {
+            border-radius: 15px;
+            max-width: 90%;
+        }
+
+        .show {
+            display: block !important;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="custom-cursor"></div>
+    
+    <div class="container">
+        <h1 id="message">Sophie Wang, Will you be my valentine?</h1>
+        
+        <div class="button-container" id="button-container">
+            <button id="yes-btn">Yes</button>
+            <button id="no-btn">No</button>
+        </div>
+
+        <div class="gif-container" id="gif-container">
+            <iframe src="https://tenor.com/embed/15324023" width="498" height="224" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <script>
+        const cursor = document.getElementById('custom-cursor');
+        const noBtn = document.getElementById('no-btn');
+        const yesBtn = document.getElementById('yes-btn');
+        const message = document.getElementById('message');
+        const buttonContainer = document.getElementById('button-container');
+        const gifContainer = document.getElementById('gif-container');
+        
+        let cursorX = 0;
+        let cursorY = 0;
+        
+        // Initialize no button position (fixed positioning, so using viewport coordinates)
+        const yesBtnRect = yesBtn.getBoundingClientRect();
+        let noBtnX = yesBtnRect.right + 30;
+        let noBtnY = yesBtnRect.top;
+        
+        const repelRadius = 150; // Distance at which cursor repels the button
+
+        // Create clone divs for wrapped rendering
+        const clones = [];
+        for (let i = 0; i < 8; i++) {
+            const clone = document.createElement('div');
+            clone.className = 'no-btn-clone';
+            clone.textContent = 'No';
+            clone.style.display = 'none';
+            document.body.appendChild(clone);
+            clones.push(clone);
+        }
+
+        // Set initial position of no button
+        noBtn.style.left = noBtnX + 'px';
+        noBtn.style.top = noBtnY + 'px';
+
+        function updateButtonPositions() {
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const noBtnRect = noBtn.getBoundingClientRect();
+            const btnWidth = noBtnRect.width;
+            const btnHeight = noBtnRect.height;
+
+            // Main button position
+            noBtn.style.left = noBtnX + 'px';
+            noBtn.style.top = noBtnY + 'px';
+
+            // Hide all clones first
+            clones.forEach(clone => clone.style.display = 'none');
+
+            let cloneIndex = 0;
+
+            // Check if we need clones for edge wrapping
+            const edgeThreshold = 50; // How close to edge before showing wrapped clone
+
+            // Right edge wrapping (show on left)
+            if (noBtnX + btnWidth > viewportWidth - edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX - viewportWidth) + 'px';
+                clones[cloneIndex].style.top = noBtnY + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Left edge wrapping (show on right)
+            if (noBtnX < edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX + viewportWidth) + 'px';
+                clones[cloneIndex].style.top = noBtnY + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Bottom edge wrapping (show on top)
+            if (noBtnY + btnHeight > viewportHeight - edgeThreshold) {
+                clones[cloneIndex].style.left = noBtnX + 'px';
+                clones[cloneIndex].style.top = (noBtnY - viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Top edge wrapping (show on bottom)
+            if (noBtnY < edgeThreshold) {
+                clones[cloneIndex].style.left = noBtnX + 'px';
+                clones[cloneIndex].style.top = (noBtnY + viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Corner cases - need to show in diagonal corners too
+            // Top-left corner
+            if (noBtnX < edgeThreshold && noBtnY < edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX + viewportWidth) + 'px';
+                clones[cloneIndex].style.top = (noBtnY + viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Top-right corner
+            if (noBtnX + btnWidth > viewportWidth - edgeThreshold && noBtnY < edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX - viewportWidth) + 'px';
+                clones[cloneIndex].style.top = (noBtnY + viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Bottom-left corner
+            if (noBtnX < edgeThreshold && noBtnY + btnHeight > viewportHeight - edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX + viewportWidth) + 'px';
+                clones[cloneIndex].style.top = (noBtnY - viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+
+            // Bottom-right corner
+            if (noBtnX + btnWidth > viewportWidth - edgeThreshold && noBtnY + btnHeight > viewportHeight - edgeThreshold) {
+                clones[cloneIndex].style.left = (noBtnX - viewportWidth) + 'px';
+                clones[cloneIndex].style.top = (noBtnY - viewportHeight) + 'px';
+                clones[cloneIndex].style.display = 'block';
+                cloneIndex++;
+            }
+        }
+
+        // Track mouse movement
+        document.addEventListener('mousemove', (e) => {
+            cursorX = e.clientX;
+            cursorY = e.clientY;
+            
+            // Update custom cursor position
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+
+            // Calculate distance between cursor and no button
+            const noBtnRect = noBtn.getBoundingClientRect();
+            const noBtnCenterX = noBtnRect.left + noBtnRect.width / 2;
+            const noBtnCenterY = noBtnRect.top + noBtnRect.height / 2;
+            
+            // Get viewport dimensions
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            // Calculate wrapped distances (considering the screen wraps around)
+            let dx = cursorX - noBtnCenterX;
+            let dy = cursorY - noBtnCenterY;
+            
+            // Check if wrapping around horizontally gives a shorter distance
+            if (Math.abs(dx) > viewportWidth / 2) {
+                dx = dx > 0 ? dx - viewportWidth : dx + viewportWidth;
+            }
+            
+            // Check if wrapping around vertically gives a shorter distance
+            if (Math.abs(dy) > viewportHeight / 2) {
+                dy = dy > 0 ? dy - viewportHeight : dy + viewportHeight;
+            }
+            
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // If cursor is within repel radius, move button away
+            if (distance < repelRadius) {
+                const angle = Math.atan2(dy, dx);
+                const pushDistance = repelRadius - distance;
+                
+                // Move button in opposite direction
+                noBtnX -= Math.cos(angle) * pushDistance * 0.5;
+                noBtnY -= Math.sin(angle) * pushDistance * 0.5;
+
+                const btnWidth = noBtnRect.width;
+                const btnHeight = noBtnRect.height;
+
+                // Wrap around viewport edges (normalize position)
+                while (noBtnX < -btnWidth) noBtnX += viewportWidth;
+                while (noBtnX > viewportWidth) noBtnX -= viewportWidth;
+                while (noBtnY < -btnHeight) noBtnY += viewportHeight;
+                while (noBtnY > viewportHeight) noBtnY -= viewportHeight;
+            }
+
+            // Update all button positions (main + clones)
+            updateButtonPositions();
+        });
+
+        // Yes button click handler
+        yesBtn.addEventListener('click', () => {
+            message.textContent = 'YAYYYYYYYYYYYY :D';
+            buttonContainer.classList.add('hide');
+            gifContainer.classList.add('show');
+        });
+    </script>
+</body>
+</html>
